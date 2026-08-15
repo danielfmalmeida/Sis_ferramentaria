@@ -1,62 +1,80 @@
-# Sis_Ferramentaria - Controle de Ferramentaria & Auxiliar Engeman 🛠️
+# ToolControl
 
-O **Sis_Ferramentaria** é um ecossistema multiplataforma (Desktop, Web e Mobile) projetado para automatizar o controle de estoque, gerenciamento de demandas e a rastreabilidade em tempo real de ferramentas e ativos em ambientes metalúrgicos industriais. O sistema atua de forma satélite, servindo como um braço de execução rápida para softwares de PCM (Planejamento e Controle de Manutenção), como o **Engeman**.
+Sistema de controle de empréstimo de ferramentas com autenticação biométrica e checklist digital de estoque mínimo, substituindo o processo atual em papel e planilhas Excel.
 
-Este projeto foi desenvolvido de forma 100% autoral para consolidar de forma prática as disciplinas de **Análise e Modelagem de Sistemas**, **Design de Interação Móvel** e **Lógica de Programação**.
-
----
-
-## 📌 Status do Projeto: `Fase de Desenvolvimento (Back-end)`
-*   [x] **Análise de Requisitos & Regras de Negócio**
-*   [x] **Modelagem de Dados e Arquitetura**
-*   [x] **Design de Interação (UX/UI) e Wireframes no Figma**
-*   [ ] **Desenvolvimento do Motor Lógico (Python)** `<- Atual Etapa`
-*   [ ] **Integração com Banco de Dados & Hardware (MariaDB / SDK Biométrico)**
+> 📋 **Status:** em planejamento — arquitetura e requisitos definidos, desenvolvimento ainda não iniciado (veja o [roadmap](#roadmap)).
 
 ---
 
-## 🎯 O Problema & A Solução Industrial
+## O problema
 
-No chão de fábrica, o tempo gasto para retirar uma ferramenta ou a perda de rastreabilidade de um item em manutenção gera paradas na linha de produção e falhas no planejamento do PCM.
+Hoje o controle de ferramentas e a conferência de estoque de consumíveis são feitos em fichas impressas e planilhas Excel, o que causa:
 
-O **Sis_Ferramentaria** resolve essa fricção através de um fluxo focado em eficiência operacional:
-1. **Operação Multiplataforma:** Interface Desktop (Windows) no balcão integrada ao hardware, Tablet para movimentações dinâmicas e Web para relatórios de atraso e demandas de manutenção.
-2. **Dupla Autenticação Biométrica:** Segurança e auditoria total. O empréstimo exige a validação digital do Controlador (credor) e do Colaborador (beneficiário), eliminando fraudes ou assinaturas manuais em papel.
-3. **Fluxo de Contingência Inteligente:** Caso a biometria do colaborador apresente falha de leitura (comum na indústria por sujeira ou desgaste), o sistema libera uma trava de segurança que permite ao Controlador assinar digitalmente o empréstimo por meio de uma senha mestra de contingência.
+- Nenhuma rastreabilidade de quem está com qual ferramenta no momento
+- Assinaturas em papel fáceis de perder, forjar ou simplesmente não preencher
+- Divergência de inventário só percebida quando o item já sumiu
+- Alertas de estoque mínimo feitos manualmente, sem histórico consultável
 
----
+## A solução
 
-## 🏗️ Engenharia e Modelagem do Sistema
+Dois fluxos digitais compartilhando a mesma base de dados:
 
-Os artefatos de engenharia de software criados para guiar o desenvolvimento do sistema estão mapeados na pasta `/docs/diagramas`:
+- **Empréstimo → devolução → transferência** de ferramentas, autenticado por biometria digital
+- **Checklist de estoque mínimo** com cálculo automático de divergência, impressão direto do app e alerta por e-mail automático
 
-*   **Regras de Transição de Estados:** Rastreabilidade estrita do ciclo de vida dos ativos através de três estados fixos e imutáveis: `Ferramentaria` (Disponível), `Fábrica` (Em uso) e `Manutenção` (Indisponível).
-*   **Diagrama de Classes:** Mapeamento das entidades `Colaborador`, `Ativo` (Ferramentas/Consumíveis) e `HistoricoMovimentacao` para posterior persistência em banco de dados relacional.
-*   **Mecanismo de Prevenção de Erros (Poka-Yoke):** Bloqueio lógico a nível de software que impede que ferramentas com status `Manutenção` sejam associadas a ordens de serviço ativas na fábrica.
+Composto por um app desktop para o dia a dia do almoxarifado, um app web para gestores (dashboards, relatórios, auditoria) e um backend central que garante que os dois sempre mostrem os mesmos dados em tempo real.
 
----
+## Stack
 
-## 🎨 Design de Interação (UX/UI) - Concluído no Figma
+| Camada | Tecnologia | Observação |
+|---|---|---|
+| Backend / API | Python + FastAPI | REST + JWT, único ponto de verdade dos dados |
+| Banco de dados | PostgreSQL | Suporta bem 300 usuários / 5.000 itens sem esforço |
+| App Desktop | Python + PySide6 (Qt) | Roda na estação do almoxarifado, integra leitor biométrico via USB |
+| App Web | React + TypeScript + Vite + TailwindCSS | Consumido por gestores/controladores |
+| Geração de PDF | WeasyPrint / ReportLab | Template único de checklist e relatórios |
+| E-mail | SMTP / serviço transacional | Disparo automático de alerta de divergência |
 
-A interface foi projetada seguindo os conceitos de **Mobile-First** e **Design de Alta Fricção Controlada** (onde a interface guia o usuário passo a passo para evitar erros de operação com as mãos ocupadas). Os arquivos de design e justificativas de usabilidade estão localizados em `/docs/design`.
+## Documentação completa
 
-### Diretrizes de UX Industrial Aplicadas:
-*   **Thumb Zone (Área do Polegar):** Botões críticos de confirmação e acionamento de leitores posicionados na metade inferior das telas mobile para operação com apenas uma mão.
-*   **Código de Cores de Alta Visibilidade:** Uso de contrastes severos para indicar o status imediato do ativo na listagem (Verde: Disponível, Amarelo: Em Uso, Vermelho: Manutenção/Bloqueado).
-*   **Interface Baseada em Etapas:** Telas limpas que exibem apenas uma ação por vez (Ex: Tela 1: Identificar Item -> Tela 2: Biometria Controlador -> Tela 3: Biometria Colaborador) minimizando a carga cognitiva do operador.
+Este README traz a visão geral. Os detalhes técnicos estão em `/docs`:
 
-> 💡 *Os links e capturas de tela dos protótipos navegáveis do Figma podem ser visualizados detalhadamente no arquivo especificado na pasta `/docs/design/README.md`.*
+- [`docs/01-requisitos.md`](docs/01-requisitos.md) — requisitos funcionais e não funcionais
+- [`docs/02-arquitetura.md`](docs/02-arquitetura.md) — arquitetura, modelagem de dados, integração biométrica
+- `docs/03-api-contratos.md` — contratos de endpoints da API *(a criar)*
+- `docs/04-plano-testes.md` — estratégia de testes *(a criar)*
 
----
+## Roadmap
 
-## 💻 Desenvolvimento do Core Lógico (Python)
+Desenvolvimento planejado em sprints de 2 semanas:
 
-A implementação atual na pasta `/src` foca na construção das regras de negócio puras em Python antes do acoplamento com interfaces visuais ou banco de dados. O motor implementa:
+| Sprint | Entrega |
+|---|---|
+| 0 | Setup dos repositórios, ambiente, banco de dados, CI básico |
+| 1 | Backend: modelagem de dados + CRUD de pessoas/ferramentas/setores |
+| 2 | Backend: fluxo de empréstimo/devolução (login simples, sem biometria) |
+| 3 | Integração do leitor biométrico (enrolamento + verificação) |
+| 4 | App desktop completo: empréstimo/devolução/transferência autenticados |
+| 5 | App web: dashboard + relatórios + cadastro |
+| 6 | Auditoria, alertas de atraso, exportação de relatórios |
+| 7 | Módulo de checklist: catálogo, execução, cálculo de divergência |
+| 8 | Checklist: impressão em PDF, e-mail automático de alerta |
+| 9 | Checklist: relatório de divergência e histórico |
+| 10 | Testes, hardening de segurança, documentação final, piloto |
 
-*   Algoritmos de validação de permissões e hierarquia de usuários.
-*   Tratamento de exceções para tentativas de leitura biométrica inválidas.
-*   Lógica de controle de saldo mínimo para materiais consumíveis.
+## Estrutura do projeto
 
----
-
-> ⚠️ **Nota de Privacidade e Direitos Autorais:** Este projeto é uma iniciativa estritamente autoral, acadêmica e independente. Todas as regras de negócio, interfaces de usuário no Figma e códigos foram desenvolvidos do zero. Nomes de empresas, dados de funcionários, identidades visuais corporativas ou qualquer conteúdo privado de instituições parceiras foram completamente omitidos ou descaracterizados para estrito cumprimento das leis de propriedade intelectual e sigilo de mercado.
+```
+toolcontrol/
+├── README.md
+├── docs/
+│   ├── 01-requisitos.md
+│   ├── 02-arquitetura.md
+│   ├── 03-api-contratos.md
+│   └── 04-plano-testes.md
+├── backend/            # FastAPI
+│   └── seed/
+│       └── catalogo_pastilhas_seed.csv
+├── desktop/            # PySide6
+└── frontend/           # React + Vite + Tailwind
+```
